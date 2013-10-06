@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+
+var http = require('http'),
+    port = 8080,
+     url = 'http://localhost:' + port + '/';
+/* We can access nodejitsu enviroment variables from process.env */
+/* Note: the SUBDOMAIN variable will always be defined for a nodejitsu app */
+if(process.env.SUBDOMAIN){
+  url = 'http://' + process.env.SUBDOMAIN + '.jit.su/';
+}
+
+/*
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.write('hello, I know nodejitsu.');
+  res.end();
+}).listen(port);
+*/
+
+var express = require('express'),
+    app = express(),
+    server = require('http').createServer(app),
+    io = require('socket.io').listen(server);
+
+app.use(express.bodyParser());
+server.listen(port);
+
+app.get('/', function (req, res) {
+  console.log('get index called');
+  console.log(req.body);
+  res.sendfile(__dirname + '/index.html');
+});
+
+
+app.post('/', function (req, res) {
+  console.log('index called');
+  console.log(req.body);
+  res.status(200);
+});
+
+io.sockets.on('connection', function (socket) {
+  socket.emit('news', { hello: 'world' });
+  socket.on('my other event', function (data) {
+    console.log(data);
+  });
+});
+
+
+/*
+var gith = require('gith').create(port);
+
+gith({
+    repo: 'maxcnunes/test'
+  }).on('all', function(payload){
+    console.log( 'Post-receive happened! Pushed by user: ' + payload.pusher );
+
+    socket.emit('push', { pusher: payload.pusher });
+});
+*/
+
+console.log('The http server has started at: ' + url);
